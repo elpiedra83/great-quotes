@@ -1,30 +1,67 @@
-import { useParams, Route, Link } from "react-router-dom";
+import { useEffect } from "react";
+import { useParams, Route, Link, useRouteMatch } from "react-router-dom";
+
+import useHttp from "../hooks/use-http";
+import { getSingleQuote } from "../lib/api";
+
 import Comments from "../components/comments/Comments";
 import HighlightedQuote from "../components/quotes/HighlightedQuote";
+import LoadingSpinner from "../components/UI/LoadingSpinner";
+import NoQuotesFound from "../components/quotes/NoQuotesFound";
+
 import classes from "./QuoteDetail.module.css";
 
-const DUMMY_QUOTES = [
-  { id: "q1", author: "John", text: "Learning react is fun!" },
-  { id: "q2", author: "Max", text: "Learning react is good!" },
-  { id: "q3", author: "Washington", text: "Learning react is cool!" },
-];
-
 const QuoteDetail = () => {
+  const match = useRouteMatch();
   const params = useParams();
 
-  const quote = DUMMY_QUOTES.find((quote) => quote.id === params.quoteId);
+  const {
+    sendRequest,
+    status,
+    data: quote,
+    error,
+  } = useHttp(getSingleQuote, true);
 
-  if (!quote) {
-    return <p>No quote found!</p>;
+  const { quoteId } = params;
+
+  useEffect(() => {
+    sendRequest(quoteId);
+  }, [sendRequest, quoteId]);
+
+  if (error) {
+    return <p className="centered focused">{error}</p>;
+  }
+
+  if (status === "pending") {
+    return (
+      <div className="centered">
+        <LoadingSpinner />
+      </div>
+    );
+  }
+
+  // const quote = loadedQuotes.find((quote) => quote.id === params.quoteId);
+
+  if (status === "completed" && !quote) {
+    return <NoQuotesFound />;
   }
 
   return (
     <section>
-      <Link className={classes.back} to="/quotes/">
-        ⬅
-      </Link>
+      <div className={classes.separator}>
+        <Link className={classes.back} to="/quotes/">
+          ⬅
+        </Link>
+      </div>
       <HighlightedQuote text={quote.text} author={quote.author} />
-      <Route path={`/quotes/${params.quoteId}/comments`}>
+      <Route path={match.path} exact>
+        <div className="centered">
+          <Link className="btn--flat" to={`${match.url}/comments`}>
+            Load Comments
+          </Link>
+        </div>
+      </Route>
+      <Route path={`${match.path}/comments`}>
         <Comments />
       </Route>
     </section>

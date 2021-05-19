@@ -1,5 +1,12 @@
+.separator{
+    padding-bottom: 1rem;
+    border-bottom: 3px solid #b2d4d4;
+    margin-bottom: 2rem;
+}
 .back{
     text-decoration: none;
     font-size: 2rem;
     color: teal;
+
 }
+
